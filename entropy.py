@@ -26,11 +26,11 @@ def biGramProb(word, h1):
 
 
 def calculateEntropy(dataSet):
-    h1 = "<s>"
     entropy = 0
-    for w in dataSet:
-        entropy -= biGramProb(w, h1) * log(biGramProbConditional(w, h1), 2)
-        h1 = w
+    for h1 in biGram.keys():
+        for w in biGram[h1].keys():
+            if biGramProbConditional(w, h1) == 0: continue
+            entropy -= biGramProb(w, h1) * log(biGramProbConditional(w, h1), 2)
     return entropy
 
 
@@ -63,7 +63,7 @@ for messUpWords in [0,1]:
         for i in range(EXPERIMENT_COUNT):
             if (messUpProb == 0) and i > 0: break # no need to repeat when probability is 0
 
-            uniGram = {FIRST_WORD_PADDING: 1}
+            uniGram = {}
             biGram = {}
             newDataSet = []
 

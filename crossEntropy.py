@@ -96,16 +96,17 @@ def smoothedProbConditional(word, h1, h2, lambdas):
 # print(bigramProbConditional('ale', ','))
 # print(trigramProbConditional('ale', ',', 'situace'))
 
-
 # EM ALGORITHM
-wh2 = "<<s>>"  # word history 2
-wh1 = "<s>"  # word history 1
 lambdas = [.7,.1,.1,.1] #[1/4]*4
 expCounts = [0]*4
 while True:
+    wh2 = "<<s>>"  # word history 2
+    wh1 = "<s>"  # word history 1
     for w in heldoutData:
-        for i in range(len(lambdas)):
-            expCounts[i] += lambdas[i]*trigramProbConditional(w,wh1,wh2)/smoothedProbConditional(w,wh1,wh2,lambdas)
+        expCounts[0] += lambdas[0]*flatProbConditional()/smoothedProbConditional(w,wh1,wh2,lambdas)
+        expCounts[1] += lambdas[1]*unigramProbConditional(w)/smoothedProbConditional(w,wh1,wh2,lambdas)
+        expCounts[2] += lambdas[2]*bigramProbConditional(w,wh1)/smoothedProbConditional(w,wh1,wh2,lambdas)
+        expCounts[3] += lambdas[3]*trigramProbConditional(w,wh1,wh2)/smoothedProbConditional(w,wh1,wh2,lambdas)
 
         wh2 = wh1
         wh1 = w
