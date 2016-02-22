@@ -40,7 +40,7 @@ data = [line.strip() for line in open(sys.argv[1], 'r', encoding=DATA_ENCODING)]
 characters = {}
 words = {}
 
-messUpLikelihoods = [0, .00001, .0001, .001, .01, .05, .1, .25, .5]
+messUpLikelihoods = [0, .00001, .0001, .001, .01, .05, .1, .2, .3 , .4, .5, .6, .7, .8, .9, 1]
 
 for w in data:
     words[w] = 1 if w not in words else words[w] + 1
@@ -100,7 +100,7 @@ for messUpWords in [0,1]:
         print("Entropies: ", entropies)
         print("Word count: ", wordCounts)
         print("Number of characters: ", characterCounts)
-        print("Number of characters per word: ", [ x / y for x,y in zip(characterCounts, wordCounts)])
+        print("Number of characters per word: ", [ x / len(newDataSet) for x in characterCounts])
         print("Biggest frequency: ", biggestFrequencies)
         print("Words with frequency 1: ", noOfFreqOne)
         print()

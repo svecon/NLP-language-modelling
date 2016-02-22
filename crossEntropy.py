@@ -1,4 +1,8 @@
 import sys
+import random
+import operator
+import functools
+from math import log
 
 TEST_DATA_COUNT = 20000
 HELDOUT_DATA_COUNT = 40000
@@ -33,25 +37,6 @@ for w in data:
 
 vocabularySize = len(unigram)
 textSize = len(data)
-
-
-# Checking if unigram, bigram and trigram have all the same data size
-# checkUnigram = 0
-# for v in unigram.values():
-#     checkUnigram += v
-#
-# checkBigram = 0
-# for v in bigram.values():
-#     for vv in v.values():
-#         checkBigram += vv
-#
-# checkTrigram = 0
-# for v in trigram.values():
-#     for vv in v.values():
-#         for vvv in vv.values():
-#             checkTrigram += vvv
-#
-# assert checkUnigram == checkBigram == checkTrigram
 
 def flatProbConditional():
     return 1 / vocabularySize
@@ -98,11 +83,12 @@ def smoothedProbConditional(word, h1, h2, lambdas):
 
 # EM ALGORITHM
 lambdas = [.7,.1,.1,.1] #[1/4]*4
-expCounts = [0]*4
-while True:
+while False:
+    expCounts = [0]*4
     wh2 = "<<s>>"  # word history 2
     wh1 = "<s>"  # word history 1
-    for w in heldoutData:
+    for w in data:
+        # print("{:s} {:s} {:s} {:.6e} {:.6e} {:.6e}".format(wh2, wh1, w, unigramProbConditional(w), bigramProbConditional(w, wh1), trigramProbConditional(w, wh1, wh2)))
         expCounts[0] += lambdas[0]*flatProbConditional()/smoothedProbConditional(w,wh1,wh2,lambdas)
         expCounts[1] += lambdas[1]*unigramProbConditional(w)/smoothedProbConditional(w,wh1,wh2,lambdas)
         expCounts[2] += lambdas[2]*bigramProbConditional(w,wh1)/smoothedProbConditional(w,wh1,wh2,lambdas)
@@ -110,20 +96,47 @@ while True:
 
         wh2 = wh1
         wh1 = w
-    print(expCounts)
 
-    newLambdas = [0]*4
-    for i in range(len(lambdas)):
-        newLambdas[i] = expCounts[i] / sum(expCounts)
-    print(newLambdas)
-    #newLambdas = map(lambda x: x / sum(expCounts), expCounts)
+    newLambdas = list(map(lambda x: x / sum(expCounts), expCounts))
 
-    print([ abs(i - j) for i,j in zip(newLambdas, lambdas) ])
+    if all( [ abs(x-y) < 0.0001 for x,y in zip(newLambdas, lambdas) ] ): break
 
-    if sum([ abs(i - j) for i,j in zip(newLambdas, lambdas) ]) < 0.0001:
-        break
-
-    print(lambdas)
     lambdas = newLambdas
 
-print(lambdas)
+lambdasEN = [0.09843454910828085, 0.26415213029970314, 0.5077064080458099, 0.1297069125462061];
+lambdas = lambdasEN
+
+def modifyLambdas(lambdas, difference):
+    newLambdas = list(map(lambda x: x - difference * x / sum(lambdas[0:3]), lambdas))
+    newLambdas[3] = lambdas[3] + difference
+    return newLambdas
+
+def boostLambdas(lambdas, percentage):
+    return modifyLambdas(lambdas, (1 - lambdas[3]) * percentage)
+
+boostLambdas([0.140, 0.429, 0.245, 0.186 ], 0.1)
+
+def discountLambdas(lambdas, percentage):
+    return modifyLambdas(lambdas, (-1) * lambdas[3] * (1 - percentage))
+
+discountLambdas([0.140, 0.429, 0.245, 0.186 ], .9)
+
+boostingVector = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, .95, .99]
+discountVector = [.9, .8, .7, .6, .5, .4, .3, .2, .1, 0]
+
+def calculateCrossEntropy(lambdas):
+    wh2 = "<<s>>" # word history 2
+    wh1 = "<s>" # word history 1
+    crossEntropy = 0
+    for w in testData:
+        crossEntropy -= log(smoothedProbConditional(w, wh1, wh2, lambdas), 2)
+
+        wh2 = wh1
+        wh1 = w
+    return crossEntropy / len(testData)
+
+for b in boostingVector:
+    print('boosting by ', b, 'entropy', calculateCrossEntropy(boostLambdas(lambdas, b)), 'lambdas', boostLambdas(lambdas, b))
+
+for b in discountVector:
+    print('discount to ', b, 'entropy', calculateCrossEntropy(discountLambdas(lambdas, b)), 'lambdas', discountLambdas(lambdas, b))
