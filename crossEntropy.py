@@ -1,7 +1,14 @@
 # Calculating cross entropy of a text
 # Program expects first argument to be filename of the text file to be examined.
 
-### @@@TODO
+# The script divides the data into three parts: training, heldout and test data
+# Then we iterate over the text and extract important statistics.
+
+# In the next part we learn the trigram, bigram and unigram counts from the training data.
+# Then we use EM algorithm to create a smoothing model (using linear combination of the trigram, bigram, unigram and uniform models)
+
+# Finally we calculate cross entropy using test data.
+# We also discount and then boost trigram model in our smoothed model to see how the cross entropy-behaves.
 
 # @AUTHOR: Ondřej Švec
 
